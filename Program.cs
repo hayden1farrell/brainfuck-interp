@@ -37,14 +37,14 @@ namespace brainfuck_comp
             
             for (int i = 0; i < Program.Length; i++)
             {
-                i = Translate(Program[i], i, Program, 1);   
+                i = Translate(Program[i], i, Program, 1, display);   
                 if(display == true) DisplayData();
             }
 
             DisplayData();
         }
 
-        private static int Translate(char instruction, int index, string Program, int depth)
+        private static int Translate(char instruction, int index, string Program, int depth, bool display)
         {
             commands++;
             switch (instruction)
@@ -62,7 +62,7 @@ namespace brainfuck_comp
                     DATA[POINTER] = (byte)(DATA[POINTER] - 1);
                     break;
                 case '[':   // loop start 
-                    index = Loop(index, Program,  depth);
+                    index = Loop(index, Program,  depth, display);
                     break;
                 case ']': // loop end
                     break;
@@ -93,22 +93,33 @@ namespace brainfuck_comp
             return loopEndPoint;          
         }
 
-        private static int Loop(int index, string program, int depth)
+        private static int Loop(int index, string program, int depth, bool display)
         {
+            var watch = new System.Diagnostics.Stopwatch();
             int loopEndPoint = GetLoopEnd(program, depth);
             int endPoint = loopEndPoint;
             int startPoint = POINTER;
             index++;
             int startIndex = index;
+            watch.Start();
             while(DATA[startPoint] > 0){
-                index = Translate(program[index], index, program, depth + 1);
-                if(index + 1 == endPoint + 1){ /// ERROR
+                index = Translate(program[index], index, program, depth + 1, display);
+                if(index + 1 == endPoint + 1){
                     index = startIndex;
                 }
                 else{
                     index++;
                 }
-                ///DisplayData();
+                if(display == true){
+                    watch.Stop();
+                    DisplayData();
+                    watch.Start();
+                }
+
+                if(watch.ElapsedMilliseconds >= 50000){
+                    Console.WriteLine("Loop has exceed max time");
+                    System.Environment.Exit(1);
+                }
             }
             return endPoint;
         }
